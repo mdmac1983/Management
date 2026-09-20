@@ -1,0 +1,64 @@
+name: Unzip Project
+
+# Drop a .zip file anywhere in the repo root and push it - this extracts it into place,
+# deletes the zip, and commits the result. build-apk.yml is chained to run right after this
+# workflow finishes (see its `workflow_run` trigger), so a normal update is just: upload zip,
+# wait for both workflows to go green, download the APK from the newest Release.
+on:
+  push:
+    paths:
+      - "*.zip"
+
+permissions:
+  contents: write
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract any zip files at repo root
+        run: |
+          set -e
+          shopt -s nullglob
+          zips=(*.zip)
+          if [ ${#zips[@]} -eq 0 ]; then
+            echo "No zip files found at repo root - nothing to do."
+            exit 0
+          fi
+          for z in "${zips[@]}"; do
+            echo "Extracting $z ..."
+            # Extract to a temp dir first so we can skip anything that would touch .github
+            # (the default GITHUB_TOKEN can't push workflow-file changes).
+            tmpdir=$(mktemp -d)
+            unzip -q "$z" -d "$tmpdir"
+
+            # If the zip contains a single top-level folder, treat that folder's contents as
+            # the project root (common when zipping "MyProject/" instead of its contents).
+            entries=("$tmpdir"/*)
+            if [ ${#entries[@]} -eq 1 ] && [ -d "${entries[0]}" ]; then
+              src="${entries[0]}"
+            else
+              src="$tmpdir"
+            fi
+
+            rsync -a --exclude='.github' "$src"/ ./
+            rm -rf "$tmpdir"
+            rm -f "$z"
+          done
+
+      - name: Commit extracted project
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A -- . ':!.github'
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Extract uploaded project zip [skip ci]"
+            git push
+          fi

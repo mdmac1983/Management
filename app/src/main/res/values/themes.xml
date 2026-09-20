@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base application theme (post-splash, Compose draws everything else) -->
+    <style name="Theme.Rentals" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/rentals_charcoal</item>
+        <item name="android:navigationBarColor">@color/rentals_charcoal</item>
+        <item name="android:windowBackground">@color/rentals_bg_light</item>
+    </style>
+
+    <!-- Splash screen theme - androidx.core.splashscreen reads these attrs -->
+    <style name="Theme.Rentals.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/splash_background</item>
+        <item name="postSplashScreenTheme">@style/Theme.Rentals</item>
+    </style>
+
+</resources>

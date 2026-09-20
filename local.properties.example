@@ -1,0 +1,3 @@
+# Not used in CI (GitHub Actions sets sdk.dir automatically via android-actions/setup-android).
+# Only needed for local Android Studio builds - copy to local.properties and set your SDK path.
+sdk.dir=/path/to/Android/sdk

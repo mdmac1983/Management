@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Street-art / rusty-metal palette pulled from the app icon -->
+    <color name="rentals_charcoal">#1A1A1C</color>
+    <!-- Gray, not near-black, so the dark-mode background doesn't read as "too dark". -->
+    <color name="rentals_charcoal_dark">#3A3A3C</color>
+    <color name="rentals_rust">#8B4A2B</color>
+    <color name="rentals_teal">#3FB6C4</color>
+    <color name="rentals_orange">#E8863A</color>
+    <color name="rentals_purple">#7C5CBF</color>
+    <color name="rentals_offwhite">#F4F1EA</color>
+    <color name="rentals_bg_light">#F6F4EF</color>
+    <color name="rentals_bg_dark">#3A3A3C</color>
+    <!-- Matches the OrionMD icon's own background corner color so the splash icon blends
+         seamlessly into the splash screen instead of showing a visible edge. -->
+    <color name="splash_background">#141B25</color>
+</resources>

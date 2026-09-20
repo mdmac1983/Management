@@ -1,0 +1,83 @@
+name: Bootstrap Full Project
+
+# One-time / occasional manual workflow for setting up (or replacing) the ENTIRE project from a
+# single zip, straight from a phone with no PC. Use this instead of relying on the automatic
+# Unzip Project workflow when you're standing up a brand-new repo:
+#   1. Create the repo, then use GitHub's web "Create new file" to paste in these three files:
+#      .github/workflows/unzip.yml, build-apk.yml, and bootstrap.yml (this file).
+#   2. Upload the whole-project zip to the repo root (GitHub web "Add file" > "Upload files").
+#   3. Run this workflow manually (Actions tab > Bootstrap Full Project > Run workflow).
+# It extracts everything in the zip into the repo root - EXCEPT .github, which a workflow can
+# never modify (GITHUB_TOKEN has no permission to touch workflow files) - deletes the zip,
+# commits, and kicks off Build APK.
+on:
+  workflow_dispatch:
+    inputs:
+      zip_name:
+        description: "Zip file name at the repo root (leave blank to auto-detect the only .zip there)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract whole-project zip into repo root
+        run: |
+          set -e
+          if [ -n "${{ inputs.zip_name }}" ]; then
+            zip_file="${{ inputs.zip_name }}"
+          else
+            shopt -s nullglob
+            zips=(*.zip)
+            if [ ${#zips[@]} -eq 0 ]; then
+              echo "::error::No .zip file found at the repo root. Upload one first, or pass zip_name."
+              exit 1
+            fi
+            if [ ${#zips[@]} -gt 1 ]; then
+              echo "::error::Multiple .zip files found - pass zip_name to pick one: ${zips[*]}"
+              exit 1
+            fi
+            zip_file="${zips[0]}"
+          fi
+
+          echo "Extracting $zip_file into repo root ..."
+          tmpdir=$(mktemp -d)
+          unzip -q "$zip_file" -d "$tmpdir"
+
+          entries=("$tmpdir"/*)
+          if [ ${#entries[@]} -eq 1 ] && [ -d "${entries[0]}" ]; then
+            src="${entries[0]}"
+          else
+            src="$tmpdir"
+          fi
+
+          rsync -a --exclude='.github' "$src"/ ./
+          rm -rf "$tmpdir"
+          rm -f "$zip_file"
+
+      - name: Commit bootstrapped project
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A -- . ':!.github'
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Bootstrap full project from uploaded zip [skip ci]"
+            git push
+          fi
+
+      - name: Kick off Build APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run build-apk.yml --ref "${{ github.ref_name }}"

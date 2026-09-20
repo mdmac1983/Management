@@ -1,0 +1,20 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+
+app/build/
+app/release/
+app/debug/
+
+# Real signing credentials - never commit these. See SETUP_INSTRUCTIONS.md if you want to add
+# real release signing later (build.gradle.kts falls back to debug signing without this file).
+keystore.properties
+*.jks
+*.keystore
